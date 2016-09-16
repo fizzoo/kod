@@ -27,11 +27,31 @@
       (setf (aref m rand-i rand-j) value-j)))
   (normalize-matrix m))
 
+(defun add-diagonal-bias-matrix (m &optional (value 0.1))
+  "Adds a diagonal bias of size value"
+  (cond ((not (= (array-dimension m 0)
+                 (array-dimension m 1)))
+         (error "Mismatching column size, can't add diagonal bias!"))
+        (t
+         (dotimes (i (array-dimension m 0))
+           (setf (aref m i i) (+ (aref m i i) value)))
+         (normalize-matrix m))))
+
+(defun make-good-transition-matrix (size)
+  "Makes a good random transition matrix, i.e. some noise and diagonal
+bias"
+  (let ((m (make-uniform-matrix size size)))
+    (add-diagonal-bias-matrix m)
+    (add-noise-matrix m)
+    m))
 
 
+;; (defparameter *uniform* (make-uniform-matrix 2 3))
+;; (add-noise-matrix *uniform*)
+;; (print *uniform*)
+;; (defparameter *uniform-diag* (make-uniform-matrix 3 3))
+;; (add-diagonal-bias-matrix *uniform-diag*)
+;; (add-noise-matrix *uniform-diag*)
+;; (print *uniform-diag*)
 
-(defparameter *uniform* (make-uniform-matrix 2 3))
-(add-noise-matrix *uniform*)
-
-(print *uniform*)
-
+(make-good-transition-matrix 4)
