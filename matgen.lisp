@@ -32,5 +32,6 @@
 
 (defparameter *uniform* (make-uniform-matrix 2 3))
 (add-noise-matrix *uniform*)
+
 (print *uniform*)
 
