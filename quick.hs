@@ -1,4 +1,4 @@
-import Test.QuickCheck
+import Test.QuickCheck 
 import Data.List (intersperse)
 
 split :: Char -> String -> [String]
