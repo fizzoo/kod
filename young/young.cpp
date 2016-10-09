@@ -17,7 +17,7 @@ bool representable(unsigned long y, int b) {
 }
 
 int main() {
-  unsigned long y, l, b, sum, tmpl;
+  unsigned long y, l, b, sum, maxb, minb;
 
   std::cin >> y >> l;
 
@@ -29,19 +29,25 @@ int main() {
   }
   std::reverse(l_rep.begin(), l_rep.end());
 
-  b = 10;
+  minb = 10;
+  maxb = y;
   while (1) {
+    b = (minb + maxb) / 2;
     sum = 0;
-    tmpl = l;
+
     for (int i = 0; i < l_rep.size(); ++i) {
       sum *= b;
       sum += l_rep[i];
     }
 
     if (sum >= y) {
-      break;
+      maxb = b-1;
     } else {
-      ++b;
+      minb = b+1;
+    }
+    if (minb == maxb) {
+      b = maxb;
+      break;
     }
 #ifdef FETT
     std::cout << sum << std::endl;
