@@ -7,16 +7,6 @@
 
 using namespace std;
 
-bool representable(uint64_t y, uint64_t b) {
-  while (y > 0) {
-    if ((y % b) >= 10) {
-      return false;
-    }
-    y /= b;
-  }
-
-  return true;
-}
 uint64_t representation(uint64_t y, uint64_t b){
   vector<char> str;
   uint64_t rep = 0;
@@ -90,60 +80,20 @@ int main() {
   uint64_t y, l, b, sum, maxb, minb, tmpl;
 
   std::cin >> y >> l;
+  b = y - 1;
 
-  // std::vector<uint64_t> l_rep;
-  // tmpl = l;
-  // while (tmpl > 0) {
-  //   l_rep.push_back(tmpl % 10);
-  //   tmpl /= 10;
-  // }
-  // std::reverse(l_rep.begin(), l_rep.end());
-
-  b = y;
-  // // Get a maximum possible b, but this one is not certain to be representable
-  // minb = 10;
-  // maxb = y;
-  // while (1) {
-  //   b = (minb + maxb) / 2;
-  //   sum = 0;
-
-  //   for (uint64_t i = 0; i < l_rep.size(); ++i) {
-  //     sum *= b;
-  //     sum += l_rep[i];
-  //   }
-
-  //   // std::cout << minb << "." << b << "." << maxb << " - " << sum << "." << y << std::endl;
-  //   if (sum == y) {
-  //     // std::cout << "instawon" << std::endl;
-  //     std::cout << b << std::endl;
-  //     return 0;
-  //   } else if (sum > y) {
-  //     maxb = b - 1;
-  //   } else {
-  //     minb = b + 1;
-  //   }
-  //   if (minb == maxb) {
-  //     b = maxb;
-  //     break;
-  //   }
-  // }
-
-  if (b > 10000) { // Else probably not worth
-    for (uint64_t i = l; i < 1000000; ++i) {
-      uint64_t lel = findb(y, i);
-      if (lel) {
-        // std::cerr << "lelled out at " << i << std::endl;
-        std::cout << lel << std::endl;
-        return 0;
-      }
+  for (uint64_t i = l; i < 10000000000; ++i) {
+    uint64_t lel = findb(y, i);
+    if (lel) {
+      std::cout << lel;
+      return 0;
     }
   }
 
   b = b < 1000000 ? b : 1000000;
   while (b >= 10) {
     if (representation(y, b) >= l) {
-      // std::cout << "slowshit" << std::endl;
-      std::cout << b << std::endl;
+      std::cout << b;
       return 0;
     }
     --b;
