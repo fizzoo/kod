@@ -36,12 +36,13 @@ uint64_t findb(uint64_t actualage, uint64_t wantage) {
   }
   std::reverse(bwantrep.begin(), bwantrep.end());
 
-  uint64_t b, minb = 10, maxb = 100000, age;
+  uint64_t b, minb = 10, maxb = 1UL << 62, age, tmp;
   while (1) {
     age = 0;
-    b = (minb + maxb) / 2;
+    b = minb + ((maxb - minb) / 2);
     for (uint64_t i = 0; i < bwantrep.size(); ++i) {
-      age *= b;
+      tmp = age * b;
+      age = age != 0 && tmp / age != b ? 1UL << 62 : tmp;
       age += bwantrep[i];
     }
     if (actualage == age) {
@@ -54,7 +55,8 @@ uint64_t findb(uint64_t actualage, uint64_t wantage) {
     if (minb == maxb - 1 || minb == maxb) {
       age = 0;
       for (uint64_t i = 0; i < bwantrep.size(); ++i) {
-        age *= minb;
+        tmp = age * minb;
+        age = age != 0 && tmp / age != minb ? 1UL << 62 : tmp;
         age += bwantrep[i];
       }
       if (actualage == age) {
@@ -62,7 +64,8 @@ uint64_t findb(uint64_t actualage, uint64_t wantage) {
       }
       age = 0;
       for (uint64_t i = 0; i < bwantrep.size(); ++i) {
-        age *= maxb;
+        tmp = age * maxb;
+        age = age != 0 && tmp / age != maxb ? 1UL << 62 : tmp;
         age += bwantrep[i];
       }
       if (actualage == age) {
@@ -77,12 +80,12 @@ uint64_t findb(uint64_t actualage, uint64_t wantage) {
 }
 
 int main() {
-  uint64_t y, l, b, sum, maxb, minb, tmpl;
+  uint64_t y, l, b;
 
   std::cin >> y >> l;
   b = y - 1;
 
-  for (uint64_t i = l; i < 10000000000; ++i) {
+  for (uint64_t i = l; i <= 9999; ++i) {
     uint64_t lel = findb(y, i);
     if (lel) {
       std::cout << lel;
@@ -90,7 +93,7 @@ int main() {
     }
   }
 
-  b = b < 1000000 ? b : 1000000;
+  b = b < 100000 ? b : 100000;
   while (b >= 10) {
     if (representation(y, b) >= l) {
       std::cout << b;
@@ -98,4 +101,6 @@ int main() {
     }
     --b;
   }
+
+  throw 3;
 }
