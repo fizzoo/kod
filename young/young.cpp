@@ -6,7 +6,7 @@
 
 using namespace std;
 
-bool representable(unsigned long y, int b) {
+bool representable(unsigned long y, unsigned long b) {
   while (y > 0) {
     if ((y % b) >= 10) {
       return false;
@@ -17,8 +17,8 @@ bool representable(unsigned long y, int b) {
   return true;
 }
 
-int findb(int actualage, int wantage) {
-  vector<int> bwantrep;
+unsigned long findb(unsigned long actualage, unsigned long wantage) {
+  vector<unsigned long> bwantrep;
 
   while (wantage > 0) {
     bwantrep.push_back(wantage % 10);
@@ -26,11 +26,11 @@ int findb(int actualage, int wantage) {
   }
   std::reverse(bwantrep.begin(), bwantrep.end());
 
-  unsigned long b, minb = 10, maxb = 100000, age;
+  unsigned long long b, minb = 10, maxb = 100000, age;
   while (1) {
     age = 0;
     b = (minb + maxb) / 2;
-    for (int i = 0; i < bwantrep.size(); ++i) {
+    for (unsigned long i = 0; i < bwantrep.size(); ++i) {
       age *= b;
       age += bwantrep[i];
     }
@@ -43,7 +43,7 @@ int findb(int actualage, int wantage) {
     }
     if (minb == maxb - 1 || minb == maxb) {
       age = 0;
-      for (int i = 0; i < bwantrep.size(); ++i) {
+      for (unsigned long i = 0; i < bwantrep.size(); ++i) {
         age *= minb;
         age += bwantrep[i];
       }
@@ -51,7 +51,7 @@ int findb(int actualage, int wantage) {
         return minb;
       }
       age = 0;
-      for (int i = 0; i < bwantrep.size(); ++i) {
+      for (unsigned long i = 0; i < bwantrep.size(); ++i) {
         age *= maxb;
         age += bwantrep[i];
       }
@@ -87,7 +87,7 @@ int main() {
     b = (minb + maxb) / 2;
     sum = 0;
 
-    for (int i = 0; i < l_rep.size(); ++i) {
+    for (unsigned long i = 0; i < l_rep.size(); ++i) {
       sum *= b;
       sum += l_rep[i];
     }
@@ -96,7 +96,7 @@ int main() {
       // std::cout << "instawon" << std::endl;
       std::cout << b << std::endl;
       return 0;
-    } else if (sum >= y) {
+    } else if (sum > y) {
       maxb = b - 1;
     } else {
       minb = b + 1;
@@ -107,9 +107,9 @@ int main() {
     }
   }
 
-  if (b > 1000) { // Else probably not worth
-    for (int i = l; i < 1000000; ++i) {
-      int lel = findb(y, i);
+  if (b > 10000) { // Else probably not worth
+    for (unsigned long i = l; i < 1000000; ++i) {
+      unsigned long lel = findb(y, i);
       if (lel) {
         // std::cout << "lelled out at " << i << std::endl;
         std::cout << lel << std::endl;
