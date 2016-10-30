@@ -1,16 +1,17 @@
-dig :: Floating a => a -> a -> a 
-dig from to = 0.5 * to * to - 0.5 * from * from
+dig :: Floating a => a -> a
+dig x = 0.5 * x * x
   
 calculate_costs :: Floating a => a -> a -> [a] -> a
-calculate_costs w h ls = lefts ls + rights ls + begin + end
+calculate_costs w h ls = rec (0:ls ++ [w])
   where
-  heightmult = w / h
-  begin = dig 0 (head ls * (1.0 + heightmult)/ 2)
-  end = dig 0 (((w - last ls)/2) + h)
-  lefts (a:b:rest) = dig 0 ((b-a + heightmult*(b-a))/2) + lefts (b:rest)
-  lefts _ = 0                   -- 1 or 0 elements
-  rights (a:b:rest) = 0.0
-  rights _ = 0                  -- 1 or 0 elements
+  heightmult = h / w
+  rec (a:b:rest) = left + right + rec (b:rest)
+    where
+    midpoint = ((a+b)/2) + (heightmult*(b-a)/2)
+    left = dig (midpoint-a + heightmult*a)
+    right = dig (b-midpoint + heightmult*b) - dig (heightmult*b)
+  rec [x] = dig (heightmult*x)
+  rec _ = error "[] rec call"
 
 qanat :: Floating a => a -> a -> a -> [a]
 qanat w h n = cost:placements
