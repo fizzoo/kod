@@ -1,6 +1,9 @@
+
+-- Very difficult primitive function.
 dig :: Floating a => a -> a
 dig x = 0.5 * x * x
 
+-- Fully calculates costs of some placements of shafts.
 calculateCosts :: Double -> [Double] -> Double
 calculateCosts h = rec
   where
@@ -12,32 +15,27 @@ calculateCosts h = rec
   rec [x] = dig (h*x)
   rec _ = error "[] rec call"
 
-placeBetween :: Floating a => a -> a -> a -> a
-placeBetween a b h = -(a+b)*(h**2-1)/2
+-- Esoteric closed form solution based on h,
+-- gets the proportions right.
+f :: Double -> Integer -> Double
+f h x = let g = -1/(h**2 - 1)
+            sq = sqrt(g**2 - 1)
+            a = g + sq
+            b = g - sq
+            in a^x - b^x
 
-uniform :: Integer -> Double -> [Double]
-uniform n max = map ((*(max/(fromInteger (n-1)))) . fromInteger) [0..(n-1)]
+-- Helper to also scale f. Curry it.
+place :: Double -> Double -> Integer -> Integer -> Double
+place w h maxn = (/ f h maxn) . (w*) . f h
 
-improveGuess :: Double -> [Double] -> Double -> [Double]
-improveGuess prev (_:c:r) h = prev : improveGuess (placeBetween prev c h) (c:r) h
-improveGuess prev [x] _ = prev:[x]
-improveGuess _ _ _ = error "[] improveguess call"
-
-lowdiff :: [Double] -> [Double] -> Bool
-lowdiff a b = maximum (map abs (zipWith (-) a b)) < 0.00001
-
-keepImproving :: [Double] -> Double -> [Double]
-keepImproving prev h
-  | lowdiff prev cur = cur
-  | otherwise = keepImproving cur h
-  where
-    cur = improveGuess (head prev) (tail prev) h
-
+-- Computes solution to entire problem.
+-- Returns both the cost sum and the <10 shaft positions.
 qanat :: Integer -> Integer -> Integer -> [Double]
-qanat w h n = cost : map (*wf) (tail $ init placements)
+qanat w h n = take 11 $ cost : tail (init placements)
   where
-  cost = wf * wf * calculateCosts heightmult placements
-  placements = keepImproving (uniform (n+2) 1.0) heightmult :: [Double]
+  cost = calculateCosts heightmult placements
+  placements = map p [0..(n+1)]
+  p = place wf heightmult (n+1)
   wf = fromIntegral w :: Double
   heightmult = fromIntegral h / wf :: Double
 
