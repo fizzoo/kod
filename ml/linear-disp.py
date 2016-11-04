@@ -13,16 +13,16 @@ import seaborn as sns
 sns.set()
 
 
-# The true model we're trying to find, with some noise
 def our_random(x):
+    """Get a sample from the "true" model at x."""
     epsilon = np.random.randn()/10
     k = 0.6
     m = 1.4
     return k*x + m + epsilon
 
 
-# Gaussian
 def gauss(mean, sigma):
+    """Create a gaussian distribution, returning it as a closure."""
     meannp = np.array(mean)
     sigmanp = np.array(sigma)
 
@@ -35,8 +35,8 @@ def gauss(mean, sigma):
     return f
 
 
-# Calculate likelihood 'P(y | w)' (not log-likelihood)
 def prob_for(x, y, w):
+    """Calculate likelihood 'P(y | w, x)' (not log-likelihood)"""
     guess_y = np.array([w[0] + w[1] * _x for _x in x])
     diff = y - guess_y
     err_to_prob = gauss([0], [[1]])
@@ -45,8 +45,8 @@ def prob_for(x, y, w):
     return prodprobs
 
 
-# Picks a nice color for the line depending on our confidence, x [0, 1]
 def color(x):
+    """Return a nice color for a line depending on our confidence x ([0, 1])"""
     r = int(255*x)
     g = int(128-np.abs(128-256*x))
     b = int(255-255*x)
@@ -58,8 +58,8 @@ def color(x):
     return str
 
 
-# Plot y=kx+m with w containing [m k]
 def plot_transpar(w, alpha):
+    """Plot y=kx+m with w containing [m k]"""
     x = np.linspace(-1.5, 1.5, 3)
     y = [w[0] + w[1]*_x for _x in x]
     plt.plot(x, y, alpha=alpha, color=color(alpha), zorder=1)
@@ -70,6 +70,7 @@ def main():
     lin = np.linspace(-1.0, 3.0, 50)
     wspace = np.array([np.array([i, j]) for i in lin for j in lin])
 
+    # "Sampled" data, vary the number here for accuracy
     data_x = np.linspace(-1.5, 1.5, 20)
     data_y = [our_random(i) for i in data_x]
     w = np.array([prob_for(data_x, data_y, w) for w in wspace])
@@ -81,23 +82,32 @@ def main():
 
     maxpost = posterior[posterior.argsort()][-1]
 
+    # For subplotting
     fig = plt.figure()
-    ax = fig.add_subplot(133)
-    for k, v in enumerate(posterior):
-        plot_transpar(wspace[k], v/maxpost)
-    plt.scatter(data_x, data_y, zorder=2)
 
-    ax = fig.add_subplot(132)
-    X, Y = np.meshgrid(lin, lin)
-    posterior2d = np.reshape(posterior, (len(lin), len(lin)))
-    ax.contourf(X, Y, posterior2d, 100, cmap=plt.cm.jet)
-
+    # The prior 2d space
     ax = fig.add_subplot(131)
+    plt.title("Prior")
     X, Y = np.meshgrid(lin, lin)
     prior2d = [prior([i, j]) for i in lin for j in lin]
     prior2d = np.reshape(prior2d, (len(lin), len(lin)))
     ax.contourf(X, Y, prior2d, 100, cmap=plt.cm.jet)
 
+    # The posterior 2d space
+    ax = fig.add_subplot(132)
+    plt.title("Posterior")
+    X, Y = np.meshgrid(lin, lin)
+    posterior2d = np.reshape(posterior, (len(lin), len(lin)))
+    ax.contourf(X, Y, posterior2d, 100, cmap=plt.cm.jet)
+
+    # Visualization of best models
+    ax = fig.add_subplot(133)
+    plt.title("Best models")
+    for k, v in enumerate(posterior):
+        plot_transpar(wspace[k], v/maxpost)
+    plt.scatter(data_x, data_y, zorder=2)
+
+    # Draw it all
     plt.show()
 
 
