@@ -8,7 +8,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import functools
 import seaborn as sns
 sns.set()
@@ -92,10 +91,6 @@ def main():
     X, Y = np.meshgrid(lin, lin)
     posterior2d = np.reshape(posterior, (len(lin), len(lin)))
     ax.contourf(X, Y, posterior2d, 100, cmap=plt.cm.jet)
-    # ax.pcolormesh(X, Y, posterior2d,
-    #                    norm=mpl.colors.SymLogNorm(linthresh=0.03, linscale=0.03,
-    #                                              vmin=-1.0, vmax=1.0),
-    #                    cmap='RdBu_r')
 
     ax = fig.add_subplot(131)
     X, Y = np.meshgrid(lin, lin)
