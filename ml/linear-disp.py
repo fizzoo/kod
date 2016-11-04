@@ -8,15 +8,15 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import functools
-from mpl_toolkits.mplot3d import Axes3D # 'projection=3d'
 import seaborn as sns
 sns.set()
 
 
 # The true model we're trying to find, with some noise
 def our_random(x):
-    epsilon = np.random.randn()/30
+    epsilon = np.random.randn()/10
     k = 0.6
     m = 1.4
     return k*x + m + epsilon
@@ -46,33 +46,63 @@ def prob_for(x, y, w):
     return prodprobs
 
 
+# Picks a nice color for the line depending on our confidence, x [0, 1]
+def color(x):
+    r = int(255*x)
+    g = int(128-np.abs(128-256*x))
+    b = int(255-255*x)
+
+    r -= g//2
+    b -= g//2
+
+    str = "#%0.2X%0.2X%0.2X" % (r, g, b)
+    return str
+
+
 # Plot y=kx+m with w containing [m k]
 def plot_transpar(w, alpha):
     x = np.linspace(-1.5, 1.5, 3)
     y = [w[0] + w[1]*_x for _x in x]
-    plt.plot(x, y, alpha=alpha, color="r")
+    plt.plot(x, y, alpha=alpha, color=color(alpha), zorder=1)
 
 
 def main():
     # Space in image for w0, w1
-    lin = np.linspace(-1.0, 3.0, 20)
+    lin = np.linspace(-1.0, 3.0, 50)
     wspace = np.array([np.array([i, j]) for i in lin for j in lin])
 
     data_x = np.linspace(-1.5, 1.5, 20)
     data_y = [our_random(i) for i in data_x]
     w = np.array([prob_for(data_x, data_y, w) for w in wspace])
 
-    maxw = w[w.argsort()][-1]
+    prior = gauss([0, 0], [[1, 0], [0, 1]])
+    p = np.array([prior(w) for w in wspace])
+
+    posterior = w*p
+
+    maxpost = posterior[posterior.argsort()][-1]
 
     fig = plt.figure()
-    ax = fig.add_subplot(122)
-    for k, v in enumerate(w):
-        plot_transpar(wspace[k], v/maxw)
+    ax = fig.add_subplot(133)
+    for k, v in enumerate(posterior):
+        plot_transpar(wspace[k], v/maxpost)
+    plt.scatter(data_x, data_y, zorder=2)
 
-    ax = fig.add_subplot(121, projection="3d")
-    wspace_x = [a[0] for a in wspace]
-    wspace_y = [a[1] for a in wspace]
-    ax.scatter(wspace_x, wspace_y, w)
+    ax = fig.add_subplot(132)
+    X, Y = np.meshgrid(lin, lin)
+    posterior2d = np.reshape(posterior, (len(lin), len(lin)))
+    ax.contourf(X, Y, posterior2d, 100, cmap=plt.cm.jet)
+    # ax.pcolormesh(X, Y, posterior2d,
+    #                    norm=mpl.colors.SymLogNorm(linthresh=0.03, linscale=0.03,
+    #                                              vmin=-1.0, vmax=1.0),
+    #                    cmap='RdBu_r')
+
+    ax = fig.add_subplot(131)
+    X, Y = np.meshgrid(lin, lin)
+    prior2d = [prior([i, j]) for i in lin for j in lin]
+    prior2d = np.reshape(prior2d, (len(lin), len(lin)))
+    ax.contourf(X, Y, prior2d, 100, cmap=plt.cm.jet)
+
     plt.show()
 
 
