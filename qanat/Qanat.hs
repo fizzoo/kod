@@ -1,3 +1,4 @@
+module Qanat where
 
 -- Very difficult primitive function.
 dig :: Floating a => a -> a
@@ -44,5 +45,5 @@ main = do
   line <- getLine
   let ints   = map read $ words line
       answers = case ints of [a, b, c] -> qanat a b c
-                             _ -> error "Invalid parameters"
+                             _         -> error "Invalid parameters"
   mapM_ print answers
