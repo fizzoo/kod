@@ -1,5 +1,5 @@
-import qualified Data.Vector.Unboxed         as V
-import           System.Random               (randomIO)
+import qualified Data.Vector.Unboxed as V
+import           System.Random       (randomIO)
 
 
 main :: IO ()
