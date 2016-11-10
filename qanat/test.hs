@@ -9,7 +9,7 @@ import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck
 
 main :: IO ()
-main = defaultMain $ testGroup "All" [props, units]
+main = defaultMain $ localOption (QuickCheckTests 1000) $ testGroup "All" [props, units]
 
 close :: (Ord t, Fractional t) => t -> t -> Bool
 close x y =  diff < 0.0001 || diff < 0.0001 * abs x
@@ -30,7 +30,7 @@ units = testGroup "units"
                                                           59.740334, 69.697060, 79.653786, 89.610515, 99.567245]
   ]
 
-data QanatInstance = Q Integer Integer Integer deriving (Show)
+data QanatInstance = Q Int Int Int deriving (Show)
 
 instance Arbitrary QanatInstance where
   arbitrary = do

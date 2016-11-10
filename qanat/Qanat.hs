@@ -1,11 +1,11 @@
 module Qanat where
 
 -- Very difficult primitive function.
-dig :: Floating a => a -> a
+dig :: Floating d => d -> d
 dig x = 0.5 * x * x
 
 -- Fully calculates costs of some placements of shafts.
-calculateCosts :: Double -> [Double] -> Double
+calculateCosts :: Floating d => d -> [d] -> d
 calculateCosts h = rec
   where
   rec (a:b:rest) = left + right + rec (b:rest)
@@ -18,7 +18,7 @@ calculateCosts h = rec
 
 -- Esoteric closed form solution based on h,
 -- gets the proportions right.
-f :: Double -> Integer -> Double
+f :: (Floating d, Integral i) => d -> i -> d
 f h x = let g = -1/(h**2 - 1)
             sq = sqrt(g**2 - 1)
             a = g + sq
@@ -26,12 +26,12 @@ f h x = let g = -1/(h**2 - 1)
             in a^x - b^x
 
 -- Helper to also scale f. Curry it.
-place :: Double -> Double -> Integer -> Integer -> Double
+place :: (Floating d, Integral i) => d -> d -> i -> i -> d
 place w h maxn = (/ f h maxn) . (w*) . f h
 
 -- Computes solution to entire problem.
 -- Returns both the cost sum and the <10 shaft positions.
-qanat :: Integer -> Integer -> Integer -> [Double]
+qanat :: Int -> Int -> Int -> [Double]
 qanat w h n = take 11 $ cost : tail (init placements)
   where
   cost = calculateCosts heightmult placements
