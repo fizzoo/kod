@@ -15,8 +15,8 @@ fibs = map fib' [0..]
     fib' 1 = 1
     fib' n = fibs !! (n-1) + fibs !! (n-2)
 
+main :: IO ()
 main = print $ sum $ takeWhile (< 4000000) (filter even fibs)
-
 
 -- testing https://wiki.haskell.org/Memoization
 
@@ -59,7 +59,6 @@ wondrous' x
     -- miss too often. I found no measurable speedup, and straight up
     -- corecursion is easier to remember.
     | otherwise = 1 + wondrous (3*x+1)
-
 
 wondrousnomem :: Integer -> Integer
 wondrousnomem 1 = 0
