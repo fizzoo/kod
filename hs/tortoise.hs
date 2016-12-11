@@ -1,15 +1,12 @@
 import           Data.Char (toLower)
 
-
 main = undefined
 
 data Token = TForw | TBack | TLeft | TRight | TDown | TUp | TColor | TRep | TQuote | TDot | TInvalid | Tint Int | THex [Char]
   deriving (Show)
 
-data TokenLine = TokenLine Token Int
+data TokenLine = TokenLine {token :: Token, line :: Int}
   deriving (Show)
-
-type Row = Int
 
 num :: Char -> Bool
 num x = x >= '0' && x <= '9'
@@ -44,6 +41,13 @@ untilComment :: [Char] -> [Char]
 untilComment (x:xs) = if x == '%' then "" else x : untilComment xs
 untilComment ""     = ""
 
+goodWords :: [Char] -> [String]
+goodWords a = filter (not . null) $ concat $ map words $ goodWords' "" a
+
+goodWords' :: [Char] -> [Char] -> [[Char]]
+goodWords' acc (x:xs) = if elem x "\"." then acc : [x] : goodWords' "" xs else goodWords' (acc ++ [x]) xs
+goodWords' acc "" = [acc]
+
 tokenizeAll :: [Char] -> [TokenLine]
 tokenizeAll inp = let
   l = map untilComment $ lines $ map toLower inp
@@ -51,9 +55,4 @@ tokenizeAll inp = let
   t = map (map tokenize) w
   tl = zipWith (\x y -> map (\x' -> TokenLine x' y) x) t [1..]
   in concat tl
-
-goodWords a = filter (not . null) $ concat $ map words $ goodWords' "" a
-
-goodWords' acc (x:xs) = if elem x "\"." then acc : [x] : goodWords' "" xs else goodWords' (acc ++ [x]) xs
-goodWords' acc "" = [acc]
 
