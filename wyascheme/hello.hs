@@ -9,7 +9,7 @@ data LispVal = Atom String
              | DottedList [LispVal] LispVal
              | Number Integer
              | String String
-             | Bool Bool
+             | Bool Bool deriving (Show)
 
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
@@ -67,12 +67,14 @@ parseQuoted = do
     x <- parseExpr
     return $ List [Atom "quote", x]
 
-readExpr :: String -> String
+readExpr :: String -> Either String LispVal
 readExpr input = case parse parseExpr "lisp" input of
-    Left err -> "No match: " ++ show err
-    Right _  -> "Found value"
+    Left err  -> Left $ "No match: " ++ show err
+    Right val -> Right val
 
 main :: IO ()
 main = do
          (expr:_) <- getArgs
-         putStrLn (readExpr expr)
+         case (readExpr expr) of
+           Left str  -> putStrLn str
+           Right val -> print val
