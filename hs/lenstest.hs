@@ -1,10 +1,15 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TemplateHaskell       #-}
+
+import           Control.Lens
+import           Control.Lens.TH
 import           Control.Monad.Reader
 import           Control.Monad.RWS
 import           Control.Monad.State
-import Control.Lens.TH
-import Control.Lens
+import qualified Data.Map             as Map
+import           Data.Matrix
 
 mys :: (MonadState Int m, MonadIO m) => m ()
 mys = do
@@ -51,18 +56,22 @@ f = do
 
 
 data Marriage = M { _wife :: Person, _husb :: Person } deriving (Show)
-data Person = P { _name :: String, _salary :: Int } deriving (Show)
+data Person = P { _name :: String, _salary :: Int, _addr :: String } deriving (Show)
 
-olle = P "Olle" 12
-anna = P "Anna" 8
+olle = P "Olle" 12 "y"
+anna = P "Anna" 8  "e"
 
-m = M anna olle
+mar = M anna olle
 
 makeLenses ''Person
 makeLenses ''Marriage
 
--- view wife m
--- view (wife . name) m
+allp :: Traversal' Person String
+allp elt (P n s a) = (\n' a' -> P n' s a') <$> (elt n) <*> (elt a)
+
+
+-- view wife mar
+-- view (wife . name) mar
 
 -- type Degrees = Double
 -- type Latitude = Degrees
@@ -70,3 +79,38 @@ makeLenses ''Marriage
 
 -- data Meetup = Meetup { _name :: String, _location :: (Latitude, Longitude) }
 -- makeLenses ''Meetup
+
+
+mat = matrix 5 7 (uncurry (+))
+
+mapdiag :: (a -> a) -> Matrix a -> Matrix a
+mapdiag f m = let
+  d = min (nrows m) (ncols m)
+  in foldl (\m i -> setElem (f (m ! (i,i))) (i,i) m) m [1..d]
+
+-- diag :: Lens' (Matrix a) a
+-- diag :: forall f a. Functor f => (a -> f a) -> Matrix a -> f (Matrix a)
+-- diag :: Functor f => (Matrix b -> f b) -> Matrix b -> f (Matrix b)
+-- diag :: Traversal' (Matrix a) a
+-- diag = traverse mapdiag
+
+
+atx :: forall f a. Functor f =>
+     (Int, Int) -> (a -> f a) -> Matrix a -> f (Matrix a)
+atx pos elt m = wrap <$> (elt mv)
+  where
+    mv = m ! pos
+
+    wrap :: a -> Matrix a
+    wrap x = setElem x pos m
+
+atm k mb_fn m = wrap <$> (mb_fn mv)
+  where
+    mv = Map.lookup k m
+
+    wrap (Just v') = Map.insert k v' m
+    wrap Nothing = case mv of Nothing -> m
+                              Just _  -> Map.delete k m
+
+mapp = Map.fromList [(1,"hej"), (2, "da")]
+
