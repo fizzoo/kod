@@ -62,9 +62,6 @@ nRandoms n = do
       put rng'
       return nr
 
-train :: RBM -> Input -> State StdGen RBM
-train rbm inp = undefined
-
 energy :: RBM -> Vector Double -> Vector Double -> Double
 energy rbm v h = - a - b - c
   where
@@ -118,14 +115,6 @@ testfire probs = do
   rngs <- nRandoms $ size probs
   return $ cmap sign $ probs - vector rngs
 
-main :: IO ()
-main = do
-  rng <- getStdGen
-  let rbm = nullrbm 6 4
-      res = foldlM train rbm inp1
-  return ()
-
-
 test1 = nullrbm 4 5
 test2 = test1 & weights %~ (+1)
 
@@ -141,6 +130,11 @@ inp1 = vector . fmap (sign . subtract 0.5) <$>
   [[1, 0, 1, 0, 1, 0]
   ,[1, 1, 1, 0, 0, 0]]
 
+inpbook :: [Input]
+inpbook = vector <$>
+  [[1,1,1,0,0,0],[1,0,1,0,0,0],[1,1,1,0,0,0],[0,0,1,1,1,0], [0,0,1,1,0,0],[0,0,1,1,1,0]]
+
+
 -- energy test2 testv testh
 
 -- | positivevb???
@@ -151,24 +145,57 @@ inp1 = vector . fmap (sign . subtract 0.5) <$>
 -- compCD :: Vector R -> Vector R -> Int -> R
 -- compCD v h n = (/fromIntegral n) . sumElements $ v `outer` h
 
-compCDs v h n = 
+-- | The algorithm part of the book is sort of half on-line, just
+-- generally broken and using weeird notation if they actually mean
+-- something that would end up as something like a weight. The code,
+-- instead, does a full batch thingy without a single mention of it,
+-- since the code would work either way. Anyhow, a weight update
+-- scheme that might work for one-input-at-a-time is available at
+-- http://image.diku.dk/igel/paper/AItRBM-proof.pdf , which this
+-- follows. All three weight diffs for this one input, as (pos - neg),
+-- is returned.  I.e: dw (Matrix), dv (vector), dh (vector). No
+-- assumptions on h, but that algo seems to imply that it maybe should
+-- stay as a probability, and not as sampled. v' is newer than v, etc.
+-- Should probably divide this by number of inputs (?).
+compCDs :: Vector R -> Vector R -> Vector R -> Vector R -> (Matrix R, Vector R, Vector R)
+compCDs v h v' h' = (dw, dv, dh)
   where
-    e = v `outer` h
-    evb = 
+    dw = h `outer` v - h' `outer` v'
+    dv = v - v'
+    dh = h - h'
+
+-- | gibbs starting on v, h from input unused (structured this way for ease of folding)
+gibbsv :: RBM -> (Vector R, Vector R) -> State StdGen (Vector R, Vector R)
+gibbsv rbm (v, _) = do
+  h' <- testfire $ pHid rbm v
+  v' <- testfire $ pVis rbm h'
+  return (v', h')
+
+getDiffs :: RBM -> Input -> State StdGen (Matrix R, Vector R, Vector R)
+getDiffs rbm inp = do
+  let v = inp
+  h <- testfire $ pHid rbm v
+  (v', h') <- foldM (\vh _ -> gibbsv rbm vh) (v, h) [0..100]
+  return $ compCDs v h v' h'
+
+train :: RBM -> [Input] -> State StdGen RBM
+train rbm inputs = do
+  diffs <- mapM (getDiffs rbm) inputs
+  let (dw, dv, dh) = foldr (\(a, b, c) (a', b', c') -> (a+a', b+b', c+c')) (0,0,0) diffs
+      dims = fromIntegral $ length inputs
+      newrbm = rbm & weights %~ subtract (dw / scalar dims)
+                   & vbias %~ subtract (dv / scalar dims)
+                   & hbias %~ subtract (dh / scalar dims)
+  return newrbm
 
 test :: IO ()
 test = do
   rng <- getStdGen
-  print . flip runState rng $ do
-      testrng <- rngrbm 6 4 0.01
-      let dims = length inp1
-          v = head inp1
-          ph = pHid testrng v
-      h1 <- testfire ph
-      let cdpos = v `outer` h1 / (scalar $ fromIntegral dims)
-          pv = pVis testrng h1
-      v1 <- testfire pv
-      h2 <- testfire (pHid testrng v)
-      v2 <- testfire (pVis testrng h2)
-      let cdneg = v2 `outer` h2 / (scalar $ fromIntegral dims)
-      return (cdpos,cdneg)
+  print . flip evalState rng $ do
+      t0 <- rngrbm 6 4 0.01
+
+      t1 <- train t0 inpbook
+      t100 <- foldM train t1 (replicate 100 inpbook)
+      t101 <- train t100 inpbook
+      return (t1, t100, t101)
+
