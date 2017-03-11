@@ -154,27 +154,58 @@ getDiffs :: RBM -> Input -> State StdGen (Matrix R, Vector R, Vector R)
 getDiffs rbm inp = do
   let v = inp
   h <- testfire $ pHid rbm v
-  (v', h') <- foldM (\vh _ -> gibbsv rbm vh) (v, h) [0..100]
+  (v', h') <- foldM (\vh _ -> gibbsv rbm vh) (v, h) [1..1]
   return $ compCDs v h v' h'
 
-train :: RBM -> [Input] -> State StdGen RBM
-train rbm inputs = do
+train :: R -> RBM -> [Input] -> State StdGen RBM
+train eta rbm inputs = do
   diffs <- mapM (getDiffs rbm) inputs
   let (dw, dv, dh) = foldr (\(a, b, c) (a', b', c') -> (a+a', b+b', c+c')) (0,0,0) diffs
       dims = fromIntegral $ length inputs
-      newrbm = rbm & weights %~ (+ (dw / scalar dims))
-                   & vbias %~ (+ (dv / scalar dims))
-                   & hbias %~ (+ (dh / scalar dims))
+      scale = eta / dims
+      newrbm = rbm & weights %~ (+ (dw * scalar scale))
+                   & vbias %~ (+ (dv * scalar scale))
+                   & hbias %~ (+ (dh * scalar scale))
   return newrbm
+
+fwd :: RBM -> Input -> State StdGen (Vector R)
+fwd rbm inp = do
+  -- (v', h') <- gibbsv rbm (inp, inp)
+  h' <- testfire $ pHid rbm inp
+  return $ pVis rbm h'
+
 
 test :: IO ()
 test = do
-  rng <- getStdGen
+  rng <- newStdGen
+  let tren = train 0.01
+      test = vector [0,0,0,1,1,0]
   print . flip evalState rng $ do
-      t0 <- rngrbm 6 16 0.01
+      t0 <- rngrbm 6 4 0.01
 
-      t1 <- train t0 inpbook
-      t100 <- foldM train t1 (replicate 100 inpbook)
-      t101 <- train t100 inpbook
-      return (t1, t100, t101)
+      t1 <- tren t0 inpbook
+      t2 <- foldM tren t1 (replicate 4000 inpbook)
+      t3 <- tren t2 inpbook
+      out <- fwd t3 (head inpbook)
+      outtest <- fwd t3 test
+      return (out, outtest)
 
+
+-- | We can see in the output of test that the probabilities after
+-- forwarding the test vector on the one where it is active is very high,
+-- often >0.7, which is completely unlike for (head inpbook), where
+-- they are <0.2 (positions 4,5, that is). Similarly the first of the
+-- training inputs fires higher probabilities on its activations, and
+-- all this very consistently. If we keep gibbs-ing, the probabilities
+-- tend towards the relative presence in the training set, which
+-- asserts the generative-ness of it. Pos 3 is ~1 and pos 6 ~0 in all
+-- cases, which is reasonable for our data.
+--
+-- Doing it batch-wise would probably be faster, doing persistent CD
+-- likewise. Absolutely none of the improvements from hinton's very
+-- reasonable practical guide are implemented, and it would improve
+-- everything manyfold. (Also, the fold is pointless on the singleton
+-- list, but it really seems to be the case that sampling once
+-- performs the best)
+--
+-- As it is though, it seems to do some kind of learning!
