@@ -19,6 +19,11 @@ sign x
   | x >= 0 = 1
   | otherwise = -1
 
+sign01 :: (Ord a, Num a, Num t) => a -> t
+sign01 x
+  | x >= 0 = 1
+  | otherwise = 0
+
 data RBM = RBM { _weights :: Matrix R, _vbias :: Vector R, _hbias :: Vector R } deriving (Show)
 makeLenses ''RBM
 
@@ -113,37 +118,11 @@ pVis rbm h = sigmoidvec $ v' + (h <# w)
 testfire :: Vector R -> State StdGen (Vector R)
 testfire probs = do
   rngs <- nRandoms $ size probs
-  return $ cmap sign $ probs - vector rngs
-
-test1 = nullrbm 4 5
-test2 = test1 & weights %~ (+1)
-
-
-testv :: Vector R
-testv = build 4 id
-
-testh :: Vector R
-testh = build 5 (+5)
-
-inp1 :: [Input]
-inp1 = vector . fmap (sign . subtract 0.5) <$>
-  [[1, 0, 1, 0, 1, 0]
-  ,[1, 1, 1, 0, 0, 0]]
+  return $ cmap sign01 $ probs - vector rngs
 
 inpbook :: [Input]
 inpbook = vector <$>
   [[1,1,1,0,0,0],[1,0,1,0,0,0],[1,1,1,0,0,0],[0,0,1,1,1,0], [0,0,1,1,0,0],[0,0,1,1,1,0]]
-
-
--- energy test2 testv testh
-
--- | positivevb???
--- cdPos :: Vector R -> Vector R -> Int -> Vector R
--- cdPos v h n = vector . fmap ((/fromIntegral n) . sumElements) . toRows $ v `outer` h
-
--- | thought they wanted at least some sum?! but just the outer, which doesn't need a function
--- compCD :: Vector R -> Vector R -> Int -> R
--- compCD v h n = (/fromIntegral n) . sumElements $ v `outer` h
 
 -- | The algorithm part of the book is sort of half on-line, just
 -- generally broken and using weeird notation if they actually mean
@@ -183,16 +162,16 @@ train rbm inputs = do
   diffs <- mapM (getDiffs rbm) inputs
   let (dw, dv, dh) = foldr (\(a, b, c) (a', b', c') -> (a+a', b+b', c+c')) (0,0,0) diffs
       dims = fromIntegral $ length inputs
-      newrbm = rbm & weights %~ subtract (dw / scalar dims)
-                   & vbias %~ subtract (dv / scalar dims)
-                   & hbias %~ subtract (dh / scalar dims)
+      newrbm = rbm & weights %~ (+ (dw / scalar dims))
+                   & vbias %~ (+ (dv / scalar dims))
+                   & hbias %~ (+ (dh / scalar dims))
   return newrbm
 
 test :: IO ()
 test = do
   rng <- getStdGen
   print . flip evalState rng $ do
-      t0 <- rngrbm 6 4 0.01
+      t0 <- rngrbm 6 16 0.01
 
       t1 <- train t0 inpbook
       t100 <- foldM train t1 (replicate 100 inpbook)
