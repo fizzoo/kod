@@ -88,11 +88,18 @@ mapdiag f m = let
   d = min (nrows m) (ncols m)
   in foldl (\m i -> setElem (f (m ! (i,i))) (i,i) m) m [1..d]
 
--- diag :: Lens' (Matrix a) a
--- diag :: forall f a. Functor f => (a -> f a) -> Matrix a -> f (Matrix a)
--- diag :: Functor f => (Matrix b -> f b) -> Matrix b -> f (Matrix b)
--- diag :: Traversal' (Matrix a) a
--- diag = traverse mapdiag
+-- diag
+--   :: Applicative f => (Int -> f Int) -> Matrix Int -> f (Matrix Int)
+diag :: Traversal' (Matrix a) a
+diag functor m = go d m
+  where
+    d = min (nrows m) (ncols m)
+
+    set i m x = setElem x (i,i) m
+    get i m = m ! (i,i)
+
+    go 0 m' = pure m'
+    go i m' = (set i <$> go (i-1) m' <*> functor (get i m'))
 
 
 atx :: forall f a. Functor f =>
@@ -113,4 +120,11 @@ atm k mb_fn m = wrap <$> (mb_fn mv)
                               Just _  -> Map.delete k m
 
 mapp = Map.fromList [(1,"hej"), (2, "da")]
+
+kek :: StateT [Int] IO ()
+kek = do
+  mapped -= 10
+  traversed += 10
+  state <- get
+  lift $ print $ toListOf traversed state
 
