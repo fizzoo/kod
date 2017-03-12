@@ -1,28 +1,29 @@
+{-# LANGUAGE OverloadedStrings #-}
 import           Control.Monad.Writer
-import           Data.List.Split
 import           Data.Monoid
 import           Data.Set             hiding (filter, map)
+import           Data.Text            (Text, append, pack, splitOn, unpack)
 import           System.Directory
 
-type Dirrer = WriterT (Set FilePath) IO ()
+type Dirrer = WriterT (Set Text) IO ()
 
-push :: FilePath -> Dirrer
+push :: Text -> Dirrer
 push name = tell $ singleton name
 
-stem :: String -> String
+stem :: Text -> Text
 stem "" = ""
 stem x  = last . filter (/= "") $ splitOn "/" x
 
-isParent :: FilePath -> Bool
+isParent :: Text -> Bool
 isParent file = file == "." || file == ".."
 
-trav :: FilePath -> Dirrer
+trav :: Text -> Dirrer
 trav dir = do
-  let unstem = ((dir ++ "/") ++)
+  let unstem = (append (append dir "/"))
 
-  names <- lift $ (map unstem . filter (not . isParent)) <$> getDirectoryContents dir
-  files <- lift $ filterM doesFileExist names
-  dirs  <- lift $ filterM doesDirectoryExist names
+  names <- lift $ (map unstem . filter (not . isParent) . map pack) <$> getDirectoryContents (unpack dir)
+  files <- lift $ filterM (doesFileExist . unpack) names
+  dirs  <- lift $ filterM (doesDirectoryExist . unpack) names
 
   mapM (push . stem) files
   mapM trav dirs
