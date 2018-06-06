@@ -16,8 +16,8 @@ Mat init_like(Mat m, int val){
 }
 
 void print_mat(Mat m){
-  for(int y = 0; y < 5; ++y){
-    for(int x = 0; x < 5; ++x){
+  for(int y = 0; y < m.size(); ++y){
+    for(int x = 0; x < m[0].size(); ++x){
       cout << m[y][x] << " ";
     }
     cout << endl;
@@ -93,7 +93,24 @@ int main(){
   test2[2][0] = 0;
   test2[4][4] = 0;
 
-  auto inp = test2;
+  auto test3 = init_mat(4, 4, 0);
+  test3[0][1] = 1;
+  test3[0][2] = 2;
+  test3[0][3] = 3;
+  test3[1][3] = 4;
+  test3[2][3] = 5;
+  test3[3][3] = 6;
+  test3[3][2] = 7;
+  test3[3][1] = 8;
+  test3[3][0] = 9;
+  test3[2][0] = 10;
+  test3[1][0] = 11;
+  test3[1][1] = 12;
+  test3[1][2] = 13;
+  test3[2][2] = 14;
+  test3[2][1] = 15;
+
+  auto inp = test3;
   auto lens = init_like(inp, -1);
 
   for(int y = 0; y < inp.size(); ++y){
