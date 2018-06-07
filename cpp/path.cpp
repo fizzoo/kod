@@ -1,29 +1,6 @@
-#include <iostream>
-#include <vector>
+#include "mats.hpp"
 
-using namespace std;
-
-typedef vector<vector<int>> Mat;
-
-Mat init_mat(int ny, int nx, int val){
-  return vector<vector<int>>(ny, vector<int>(nx, val));
-}
-
-Mat init_like(Mat m, int val){
-  auto ny = m.size();
-  auto nx = m[0].size();
-  return init_mat(ny, nx, val);
-}
-
-void print_mat(Mat m){
-  for(int y = 0; y < m.size(); ++y){
-    for(int x = 0; x < m[0].size(); ++x){
-      cout << m[y][x] << " ";
-    }
-    cout << endl;
-  }
-  cout << endl;
-}
+// Given a matrix, find the longest increasing path (N/S/E/W, can turn at any point) in O(n*m).
 
 int step(int y, int x, const Mat *vals, Mat *lens){
   auto val = (*vals)[y][x];
