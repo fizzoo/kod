@@ -1,6 +1,6 @@
 # discussion: Hashmap here makes it more general, can deal with arbitrary strings, but there is some constant overhead to them. Could do fixed-size lists since we only have 10 distinct possibilities, but it would require notably more code.
 
-# The trie can only handle string-like types, so we may occasionally automatically convert to string for ease of use.
+# The trie can only handle string-like types, so we may freely automatically convert to string for ease of use.
 # add() and is_in() requires a string so that they're not misused too hard, but the constructor and *in* operator does not for ease of use.
 
 class Trie():
