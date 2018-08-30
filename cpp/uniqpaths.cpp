@@ -23,7 +23,6 @@ void fill_rhs(Mat *lens){
   for (int x = 0; x < maxx; ++x){
     (*lens)[maxy-1][x] = 1;
   }
-
 }
 
 int uniqpaths(int m, int n){
