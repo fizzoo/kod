@@ -4,3 +4,4 @@ build
 .stack-work
 __pycache__
 venv
+target
